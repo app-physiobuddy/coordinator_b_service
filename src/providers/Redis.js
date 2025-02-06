@@ -23,7 +23,7 @@ class RedisProvider {
       return this.client.set(key, value);
     }
     async  setWithExpiration(key, value, time) {
-      await this.client.set(key, value, time);
+      await this.client.set(key, value, {EX: time});
 
   }
   

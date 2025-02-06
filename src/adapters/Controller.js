@@ -136,7 +136,7 @@ class Controller {
                 console.log("not in redis")
                 const response = await axios.get(`${entitiesServiceURL}/therapists/${user_id}/companies/${company_id}`);
                 company_user_id = response.data.message
-                await this.redis.setWithExpiration(user_id, company_user_id, 6000)
+                await this.redis.setWithExpiration(user_id, company_user_id, 20) // 20 segundos
                 //await this.redis.set(user_id, company_user_id, 'EX', 6000); // 1-hour expiry
             }
             else {
