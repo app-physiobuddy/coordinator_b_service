@@ -5,7 +5,11 @@ const entitiesServiceURL = process.env.ENTITIES_SERVICE_URL
 const exerciseServiceURL = process.env.EXERCISE_SERVICE_URL
 const gatewayServiceURL = process.env.GATEWAY_SERVICE_URL
 
+
 class Controller {
+    constructor(redisProvider) {
+        this.redis = redisProvider
+    }
     async therapistMakesCategoryWithCompanyUserId(req, res) {
         console.log("COORDINATOR B - therapistMakesCategoryWithCompanyUserId")
         const { company_id, therapist_user_id} = req.body.data
@@ -112,27 +116,41 @@ class Controller {
         }
      }
 
+    // CACHE IMPLEMENTED HERE
      async therapistGetsAllExercisesWithCompanyUserId(req, res) {
         const { user_id, company_id } = req.params
+        const REDIS_URL = process.env.REDIS_URL
+        console.log(REDIS_URL)
         if (!user_id) throw ErrorTypes.UnauthorizedAcess("user_id is required");
         if (!company_id) throw ErrorTypes.UnauthorizedAcess("company_id is required");
+        console.log(user_id, company_id)
 
         let company_user_id
+        // check if therapist is in the company, on redis
+        
         try {
-            const { user_id, company_id } = req.params;
-            const response = await axios.get(`${entitiesServiceURL}/therapists/${user_id}/companies/${company_id}`);
-            company_user_id = response.data.message
-            //return res.status(200).send(response.data)
-        } catch (error) {
-            return res.status(500).json({
-                success: false,
-                message: error.message
-            });
+            const redisValue = await this.redis.get(user_id)
+            console.log(redisValue, "redisValue")
+            if (!redisValue) {
+                // if not, check on entities service
+                console.log("not in redis")
+                const response = await axios.get(`${entitiesServiceURL}/therapists/${user_id}/companies/${company_id}`);
+                company_user_id = response.data.message
+                await this.redis.set(user_id, company_user_id, 'EX', 6000); // 1-hour expiry
+            }
+            else {
+                company_user_id = redisValue
+                console.log("in redis")
+            }
+        } catch(e) {
+            console.log(e, "redis error")
         }
+
         //passar isso para exercise e get all categories
+        console.log("Asking for exercises of company id:", company_user_id)
         const exerciseGateway = `${exerciseServiceURL}/companies/${company_user_id}/exercises` //comapany_id is the company_user_id
         try {
-            const response = await axios.get(exerciseGateway,);
+            const response = await axios.get(exerciseGateway);
             return res.status(response.status).send(response.data)
         } catch (error) {
             return res.status(500).json({

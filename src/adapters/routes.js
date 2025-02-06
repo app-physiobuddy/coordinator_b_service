@@ -1,7 +1,10 @@
 const router = require('express').Router()
 
 const Contoller = require("./Controller")
-const controller = new Contoller()
+const redisProvider = require("../providers/Redis")
+const redis = new redisProvider()
+///
+const controller = new Contoller(redis)
 
 router.get('/', (req, res) => {
     res.send('coordinator B service')
