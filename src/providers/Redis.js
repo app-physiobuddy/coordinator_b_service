@@ -3,9 +3,17 @@ require('dotenv').config();
 
 const REDIS_URL = process.env.REDIS_URL
 
+/*
+USE REDIS ON CONSOLE:
+redis-cli -p 6380
+keys *
+flushall - deletes all db
+*/
 
 
 class RedisProvider {
+
+  
     constructor() {
       this.client = redis.createClient({
         url: REDIS_URL
