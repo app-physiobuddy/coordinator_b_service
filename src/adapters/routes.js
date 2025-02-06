@@ -5,6 +5,10 @@ const redisProvider = require("../providers/Redis")
 const redis = new redisProvider()
 ///
 const controller = new Contoller(redis)
+/*
+redis cache is working on this controller:
+therapistGetsAllExercisesWithCompanyUserId
+*/
 
 router.get('/', (req, res) => {
     res.send('coordinator B service')
